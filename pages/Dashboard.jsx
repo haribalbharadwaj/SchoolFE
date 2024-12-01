@@ -256,6 +256,15 @@ const Dashboard = () => {
     }
 
     setFormError("");
+    setErrors({}); 
+
+    let fieldsToValidate = formType === 'class' ? classFields : formType === 'teacher' ? teacherFields : studentFields;
+    const { valid, errors } = validateForm(fieldsToValidate);
+
+    if (!valid) {
+      setErrors(errors);  // Set the validation errors in state
+      return;
+    }
   
     // Clean data based on the form type
     const cleanedData = cleanData(formData, formType);
@@ -269,9 +278,7 @@ const Dashboard = () => {
       }
     }
   
-    // Validate the form based on form type
-    let fieldsToValidate = formType === 'class' ? classFields : formType === 'teacher' ? teacherFields : studentFields;
-    if (!validateForm(fieldsToValidate)) return;
+   
   
     try {
       let apiUrl;
@@ -306,7 +313,7 @@ const Dashboard = () => {
         if (error.response.data.error === 'Email already exists') {
           setFormError('The email you entered already exists. Please use a different email.');
         } else {
-          setFormError('An error occurred. Please try again later.');
+          setFormError(error.response.data.error || 'An error occurred. Please try again later.');
         }
       } else {
         console.error('Error submitting form:', error.message);
