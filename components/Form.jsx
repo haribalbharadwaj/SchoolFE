@@ -12,6 +12,8 @@ const Form = ({ formFields = [], errors = {}, handleSubmit, editingItemId = '' }
       <form onSubmit={handleSubmit} className="space-y-4">
         {formFields.map((field, index) => {
           const error = errors[field.name]; // Accessing the specific field's error
+
+          console.log(field.options); 
           
           return (
             <div key={index} className="field-group">
@@ -26,15 +28,20 @@ const Form = ({ formFields = [], errors = {}, handleSubmit, editingItemId = '' }
                   className={inputClassName(error)}
                 >
                   <option value="">Select {field.label}</option>
-                  {field.options.map((option, idx) => (
-                    <option key={idx} value={option}>
-                      {option}
-                    </option>
-                  ))}
+                  {console.log(field.options)} 
+                  {field.options && field.options.length > 0 ? (
+                    field.options.map((option, idx) => (
+                      <option key={idx} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No options available</option>
+                  )}
                 </select>
               ) : field.type === 'checkbox' ? (
                 <input
-                  id={field.name}
+                  id={field.name}                     
                   type="checkbox"
                   checked={field.value}
                   onChange={(e) =>
@@ -65,6 +72,6 @@ const Form = ({ formFields = [], errors = {}, handleSubmit, editingItemId = '' }
       </form>
     </div>
   );
-};
+}; 
 
 export default Form;

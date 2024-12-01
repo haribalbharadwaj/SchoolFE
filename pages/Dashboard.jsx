@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [formError, setFormError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [activeComponent, setActiveComponent] = useState(null);
+  const [classes, setClasses] = useState([]);
+  const [teachers,setTeachers] = useState([]);
   
   const initialFormData = {
     className: '',
@@ -40,7 +42,43 @@ const Dashboard = () => {
   const backendUrl = 'https://schoolbe-lcox.onrender.com';
   console.log('backendUrl :',backendUrl );
 
+  // Fetch classes from the backend when component mounts
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/class`);
+        setClasses(response.data); // Store fetched classes
+      } catch (error) {
+        console.error('Error fetching classes:', error);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/teacher`);
+        console.log('teachersResponse.data:', response.data); // Ensure the correct data is returned
+        setTeachers(response.data); // Update teachers state
+        console.log('updated teachers:',teachers);
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+      }
+    };
+  
+    fetchTeachers();
+  }, []); 
+
+  useEffect(() => {
+    console.log('Updated teachers state:', teachers);
+  }, [teachers]);  // This will log the state whenever 'teachers' changes
+  
+  
+
   const handleChange = (field, value, isNested = false, nestedField = '') => {
+    console.log(field.options); // Check this log to see if label and value are defined
     setFormData((prevData) => {
       if (isNested && nestedField) {
         return {
@@ -67,25 +105,50 @@ const Dashboard = () => {
   const classFields = [
     { label: 'Class Name', name: 'className', type: 'text', value: formData.className, onChange: (e) => handleChange('className', e.target.value) },
     { label: 'Year', name: 'year', type: 'number', value: formData.year, onChange: (e) => handleChange('year', e.target.value) },
-    { label: 'Teacher ID', name: 'teacher', type: 'text', value: formData.teacher, onChange: (e) => handleChange('teacher', e.target.value) },
+    { 
+      label: 'Select Teacher', 
+      name: 'teacher', 
+      type: 'select', 
+      options: teachers && teachers.length > 0 ? 
+        teachers.map((teacher) => ({ label: teacher.teacherName, value: teacher._id })) : 
+        [{ label: 'No teachers available', value: '' }],
+      value: formData.teacher,
+      onChange: (e) => handleChange('teacher', e.target.value)
+    },          
     { label: 'Student Fees', name: 'studentFees', type: 'number', value: formData.studentFees, onChange: (e) => handleChange('studentFees', e.target.value) },
     { label: 'Max Students', name: 'maxStudents', type: 'number', value: formData.maxStudents, onChange: (e) => handleChange('maxStudents', e.target.value) },
   ];
 
   const studentFields = [
     { label: 'Student Name', name: 'studentName', type: 'text', value: formData.studentName, onChange: (e) => handleChange('studentName', e.target.value) },
-    { label: 'Gender', name: 'gender', type: 'select', options: ['Male', 'Female', 'Other'], value: formData.gender, onChange: (e) => handleChange('gender', e.target.value) },
+    { label: 'Gender', name: 'gender', type: 'select',  options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' }
+    ], value: formData.gender, onChange: (e) => handleChange('gender', e.target.value) },
     { label: 'Date of Birth', name: 'dob', type: 'date', value: formData.dob ? formData.dob.slice(0, 10) : '', onChange: (e) => handleChange('dob', e.target.value) },
     { label: 'Email', name: 'email', type: 'email', value: formData.contactDetails?.email || '',onChange: (e) => handleChange('contactDetails', e.target.value, true, 'email') },
     { label: 'Phone', name: 'phone', type: 'text', value: formData.contactDetails?.phone || '', onChange: (e) => handleChange('contactDetails', e.target.value, true, 'phone') },
     { label: 'Fees Paid', name: 'feesPaid', type: 'checkbox', value: formData.feesPaid || false, onChange: (e) => handleChange('feesPaid', e.target.checked) },
-    { label: 'Class ID', name: 'class', type: 'text', value: formData.class, onChange: (e) => handleChange('class', e.target.value) },
+  //  { label: 'Class ID', name: 'class', type: 'text', value: formData.class, onChange: (e) => handleChange('class', e.target.value) },
+    { 
+      label: 'Select Class', 
+      name: 'class', 
+      type: 'select', 
+      options: classes.map((cls) => ({ label: cls.className, value: cls._id })), // Map the fetched classes to select options
+      value: formData.class,
+      onChange: (e) => handleChange('class', e.target.value)
+    },
   ];
   
 
   const teacherFields = [
     { label: 'Teacher Name', name: 'teacherName', type: 'text', value: formData.teacherName, onChange: (e) => handleChange('teacherName', e.target.value) },
-    { label: 'Gender', name: 'gender', type: 'select', options: ['Male', 'Female', 'Other'], value: formData.gender, onChange: (e) => handleChange('gender', e.target.value) },
+    { label: 'Gender', name: 'gender', type: 'select',  options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' }
+    ], value: formData.gender, onChange: (e) => handleChange('gender', e.target.value) },
     { label: 'Date of Birth', name: 'dob', type: 'date', value: formData.dob ? formData.dob.slice(0, 10) : '', onChange: (e) => handleChange('dob', e.target.value) },
     { label: 'Email', name: 'email', type: 'email', value: formData.contactDetails?.email || '', onChange: (e) => handleChange('contactDetails', e.target.value, true, 'email') },
     { label: 'Phone', name: 'phone', type: 'phone', value: formData.contactDetails?.phone || '', onChange: (e) => handleChange('contactDetails', e.target.value, true, 'phone') },
@@ -156,6 +219,7 @@ const Dashboard = () => {
         className: data.className,
         year: data.year,
         teacher: data.teacher, // ID of the teacher assigned
+        teacherName: data.teacherName,
         studentFees: data.studentFees,
         maxStudents: data.maxStudents,
         students: data.students || [], // Array of student IDs
@@ -187,8 +251,11 @@ const Dashboard = () => {
     // Ensure formType is selected
     if (!formType) {
       console.error("Form type is not selected");
+      setFormError("Form type is not selected"); 
       return;
     }
+
+    setFormError("");
   
     // Clean data based on the form type
     const cleanedData = cleanData(formData, formType);
@@ -396,6 +463,14 @@ const Dashboard = () => {
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
             </select>
+
+            {formError && (
+                <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>
+                  {formError}
+                </div>
+            )}
+
+           
           </div>
   
           {/* Icons Section */}

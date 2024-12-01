@@ -69,7 +69,7 @@ const ClassAnalytics = ({ handleClose}) => {
     setSelectedClass(selectedClass);
 
     // Filter students based on selected class
-    const filtered = students.filter(student => student.class === selectedClass);
+    const filtered = students.filter(student => student.className === selectedClass);
     setFilteredStudents(filtered);
 
     // Recalculate gender counts for the filtered students
@@ -111,7 +111,7 @@ const ClassAnalytics = ({ handleClose}) => {
   };
 
   // Get a unique list of classes from all students
-  const uniqueClasses = [...new Set(students.map(student => student.class))];
+  const uniqueClasses = [...new Set(students.map(student => student.className))];
 
   return (
     <div className="class-analytics">
@@ -165,7 +165,9 @@ const ClassAnalytics = ({ handleClose}) => {
                       <td className="border px-4 py-2">{student.gender}</td>
                       <td className="border px-4 py-2">{new Date(student.dob).toLocaleDateString()}</td>
                       <td className="border px-4 py-2">{student.feesPaid ? 'Yes' : 'No'}</td>
-                      <td className="border px-4 py-2">{student.class}</td>
+                      <td className="border px-4 py-2">{student.className}</td>
+
+
                     </tr>
                   ))}
                 </tbody>

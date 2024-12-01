@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
+import axios from 'axios';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -69,6 +70,25 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
     setShowModal(false); // Close the modal
   };
 
+  const [classes, setClasses] = useState([]);
+
+  const backendUrl = 'https://schoolbe-lcox.onrender.com';
+  console.log('backendUrl :',backendUrl );
+
+  // Fetch classes from the backend when component mounts
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/class`);
+        setClasses(response.data); // Store fetched classes
+      } catch (error) {
+        console.error('Error fetching classes:', error);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
 
   // Function to render table based on formType
   const renderTable = () => {
@@ -79,8 +99,9 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
     if (formType === 'student') {
       return (
         <>
-          {/* Class Filter */}
-          <div className="mb-4">
+         {/* Class Filter
+         
+         <div className="mb-4">
             <label htmlFor="filterClass" className="mr-2">Filter by Class:</label>
             <select
               id="filterClass"
@@ -88,15 +109,15 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
               onChange={(e) => setFilterClass(e.target.value)}
               className="border border-gray-300 px-2 py-1"
             >
-              <option value="">All</option>
-              {Array.from(new Set(dataList.map(item => item.class))) // Create unique class options
-                .map(classOption => (
-                  <option key={classOption} value={classOption}>
-                    Class {classOption}
-                  </option>
-              ))}
+              {classes.map((classItem) => (
+            <option key={classItem._id} value={classItem._id}>
+              {classItem.className}
+            </option>
+               ))}
             </select>
           </div>
+          */}
+           
 
           {/* Sorting Options */}
           <div className="mb-4">
@@ -126,7 +147,7 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
               {filteredData.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
                   <td className="border px-4 py-2">{item.studentName}</td>
-                  <td className="border px-4 py-2">{item.class}</td>
+                  <td className="border px-4 py-2">{item.className}</td>
                   <td className="border px-4 py-2">{item.gender}</td>
                   <td className="border px-4 py-2">{formatDate(item.dob)}</td>
                   <td className="border px-4 py-2">{item.contactDetails?.email}</td>
@@ -162,7 +183,7 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
               <tr key={item._id} className="hover:bg-gray-50">
                 <td className="border px-4 py-2">{item.className}</td>
                 <td className="border px-4 py-2">{item.year}</td>
-                <td className="border px-4 py-2">{item.teacher}</td>
+                <td className="border px-4 py-2">{item.teacherName}</td>
                 <td className="border px-4 py-2">{item.studentFees}</td>
                 <td className="border px-4 py-2">{item.maxStudents}</td>
                 <td className="border px-4 py-2">
@@ -196,8 +217,8 @@ const Table = ({ loading, formType, dataList, handleEdit, handleDelete }) => {
                 <td className="border px-4 py-2">{item.teacherName}</td>
                 <td className="border px-4 py-2">{item.gender}</td>
                 <td className="border px-4 py-2">{formatDate(item.dob)}</td>
-                <td className="border px-4 py-2">{item.contactDetails?.email}</td>
-                <td className="border px-4 py-2">{item.contactDetails?.phone}</td>
+                <td className="border px-4 py-2">{item.contactDetails?.email || 'N/A'}</td>
+                <td className="border px-4 py-2">{item.contactDetails?.phone || 'N/A'}</td>
                 <td className="border px-4 py-2">{item.salary}</td>
                 <td className="border px-4 py-2">
                   <button onClick={() => handleEdit(item)} className="text-blue-500">Edit</button>
