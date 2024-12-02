@@ -12,6 +12,8 @@ const Analytics = ({ handleClose }) => {
   const backendUrl = 'https://schoolbe-lcox.onrender.com';
   const [teacherData, setTeacherData] = useState([]);
   const [classData, setClassData] = useState([]);
+  const [totalStudentFees, setTotalStudentFees] = useState(0);
+  const [totalTeacherSalaries, setTotalTeacherSalaries] = useState(0);
   const [viewMode, setViewMode] = useState('monthly'); // Default view is monthly
 
   const fetchAnalyticsData = async () => {
@@ -27,6 +29,13 @@ const Analytics = ({ handleClose }) => {
 
       setTeacherData(teacherSalaries);
       setClassData(classData); // Set class data here
+
+       // Calculate total teacher salaries and total student fees
+       const totalSalaries = teacherSalaries.reduce((sum, teacher) => sum + teacher.salary, 0);
+       const totalFees = classData.reduce((sum, classItem) => sum + classItem.studentFees, 0);
+ 
+       setTotalTeacherSalaries(totalSalaries);
+       setTotalStudentFees(totalFees);
     } catch (error) {
       console.error("Error fetching analytics data:", error);
     }
@@ -43,6 +52,9 @@ const Analytics = ({ handleClose }) => {
   const handleToggle = () => {
     setViewMode(viewMode === 'monthly' ? 'yearly' : 'monthly');
   };
+
+  const totalDifference = totalStudentFees - totalTeacherSalaries;
+  const isProfit = totalDifference >= 0;
 
   // Data for Teacher Salary Bar Chart
   const teacherSalaryData = {
@@ -90,6 +102,61 @@ const Analytics = ({ handleClose }) => {
     }],
   };
 
+   // Data for Total Student Fees vs Teacher Salaries Graph
+  /* const totalComparisonData = {
+    labels: ['Total Student Fees', 'Total Teacher Salaries'], // Display the two categories on the x-axis
+    datasets: [{
+      label: 'Totals',
+      data: [totalStudentFees, totalTeacherSalaries], // Use the calculated totals
+      backgroundColor: ['rgba(255, 159, 64, 0.7)', 'rgba(54, 162, 235, 0.7)'], // Different colors for each bar
+      borderColor: ['rgba(255, 159, 64, 1)', 'rgba(54, 162, 235, 1)'],
+      borderWidth: 1,
+      plugins: [ChartDataLabels],
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        formatter: (value, context) => {
+          // Calculate the difference between student fees and teacher salaries
+          const difference = totalStudentFees - totalTeacherSalaries;
+          return context.dataIndex === 0 ? `Student Fees: ${totalStudentFees}` : `Teacher Salaries: ${totalTeacherSalaries}\nDifference: ${difference}`;
+        },
+      },
+    }],
+  };*/
+
+  const totalComparisonData = {
+    labels: ['Total Student Fees', 'Total Teacher Salaries'],
+    datasets: [
+      {
+        label: 'Totals',
+        data: [totalStudentFees, totalTeacherSalaries],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.7)',
+          isProfit ? 'rgba(75, 192, 75, 0.7)' : 'rgba(255, 99, 132, 0.7)',
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          isProfit ? 'rgba(75, 192, 75, 1)' : 'rgba(255, 99, 132, 1)',
+        ],
+        borderWidth: 1,
+        plugins: [ChartDataLabels],
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          formatter: (value, context) => {
+            if (context.dataIndex === 0) {
+              return `Fees: ₹${totalStudentFees}`;
+            } else {
+              const status = isProfit ? 'Profit' : 'Loss';
+              const absDifference = Math.abs(totalDifference);
+              return `Salaries: ₹${totalTeacherSalaries}\n${status}: ₹${absDifference}`;
+            }
+          },
+        },
+      },
+    ],
+  };
+
   return (
     <div>
       <h2>Teacher Analytics</h2>
@@ -113,45 +180,59 @@ const Analytics = ({ handleClose }) => {
       <h3>Student Fees</h3>
       <Bar data={classFeesData} />
 
-      <h2>Teacher Salaries Table</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Teacher Name</th>
-            <th>Assigned Class</th>
-            <th>Salary</th>
-          </tr>
-        </thead>
-        <tbody>
-          {teacherData.map((teacher) => (
-            <tr key={teacher._id}>
-              <td>{teacher.teacherName}</td>
-              <td>{teacher.assignedClass}</td>
-              <td>{teacher.salary}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ flex: 1, marginRight: '20px' }}>
+          <Bar data={totalComparisonData} />
+        </div>
 
-      <h2>Class Fees Table</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Class Name</th>
-            <th>Max Students</th>
-            <th>Fees</th>
-          </tr>
-        </thead>
-        <tbody>
-          {classData.map((classItem) => (
-            <tr key={classItem._id}>
-              <td>{classItem.className}</td>
-              <td>{classItem.maxStudents}</td>
-              <td>{classItem.studentFees}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <h3>Total Student Fees vs Teacher Salaries</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {/* Total Comparison Graph */}
+
+        {/* Tables for Teacher Salaries and Class Fees */}
+        <div style={{ flex: 1 }}>
+          <h2>Teacher Salaries Table</h2>
+          <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <thead>
+      <tr>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Teacher Name</th>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Assigned Class</th>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Salary</th>
+      </tr>
+    </thead>
+    <tbody>
+      {teacherData.map((teacher) => (
+        <tr key={teacher._id}>
+          <td style={{ textAlign: 'center', padding: '8px' }}>{teacher.teacherName}</td>
+          <td style={{ textAlign: 'center', padding: '8px' }}>{teacher.assignedClass}</td>
+          <td style={{ textAlign: 'center', padding: '8px' }}>₹{teacher.salary}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Class Fees Table</h2>
+  <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <thead>
+      <tr>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Class Name</th>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Max Students</th>
+        <th style={{ textAlign: 'center', padding: '8px' }}>Fees</th>
+      </tr>
+    </thead>
+    <tbody>
+      {classData.map((classItem) => (
+        <tr key={classItem._id}>
+          <td style={{ textAlign: 'center', padding: '8px' }}>{classItem.className}</td>
+          <td style={{ textAlign: 'center', padding: '8px' }}>{classItem.maxStudents}</td>
+          <td style={{ textAlign: 'center', padding: '8px' }}>₹{classItem.studentFees}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+          
+        </div>
+      </div>
     </div>
   );
 };
