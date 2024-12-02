@@ -181,11 +181,12 @@ const Analytics = ({ handleClose }) => {
       <Bar data={classFeesData} />
 
       <div style={{ flex: 1, marginRight: '20px' }}>
+      <h3>Total Student Fees vs Teacher Salaries</h3>
           <Bar data={totalComparisonData} />
         </div>
 
 
-      <h3>Total Student Fees vs Teacher Salaries</h3>
+     
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         {/* Total Comparison Graph */}
 
