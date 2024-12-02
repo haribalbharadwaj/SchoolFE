@@ -15,37 +15,43 @@ ChartJS.register(
   ChartDataLabels // Register the plugin
 );
 
-const ClassAnalytics = ({ handleClose}) => {
+const ClassAnalytics = ({ handleClose }) => {
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [maleCount, setMaleCount] = useState(0);
   const [femaleCount, setFemaleCount] = useState(0);
   const [selectedClass, setSelectedClass] = useState(""); // Track selected class filter
+  const [classes, setClasses] = useState([]); // New state to store classes data
 
   const backendUrl = 'https://schoolbe-lcox.onrender.com'; 
 
-  // Fetch all students from the backend
-  const fetchAllStudents = async () => {
+  // Fetch all students and classes from the backend
+  const fetchAllData = async () => {
     setLoading(true);
 
     try {
-      const response = await axios.get(`${backendUrl}/student`); // Update endpoint if necessary
-      console.log("Fetched All Students:", response.data);
+      // Fetch all students
+      const studentResponse = await axios.get(`${backendUrl}/student`);
+      const classResponse = await axios.get(`${backendUrl}/class`); // Fetch all classes
 
-      if (Array.isArray(response.data)) {
-        setStudents(response.data); // Store all students in state
+      console.log("Fetched All Students:", studentResponse.data);
+      console.log("Fetched All Class:", classResponse.data);
 
-        // Initially, display all students
-        setFilteredStudents(response.data);
+      if (Array.isArray(studentResponse.data)) {
+        setStudents(studentResponse.data); // Store students
+        setFilteredStudents(studentResponse.data); // Initially show all students
 
+        // Set class data
+        setClasses(classResponse.data); // Store class data
+        
         // Set gender counts based on all students
-        calculateGenderCounts(response.data);
+        calculateGenderCounts(studentResponse.data);
       } else {
         console.log("Data structure is incorrect");
       }
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -84,8 +90,17 @@ const ClassAnalytics = ({ handleClose}) => {
   };
 
   useEffect(() => {
-    fetchAllStudents(); // Fetch all students on component mount
+    fetchAllData(); // Fetch all data on component mount
   }, []);
+
+  // Function to get the teacher and year for a specific class
+  const getClassDetails = (className) => {
+    const classInfo = classes.find(c => c.className === className);
+    if (classInfo) {
+      return { teacher: classInfo.teacherName, year: classInfo.year };
+    }
+    return { teacher: 'N/A', year: 'N/A' };
+  };
 
   const chartData = {
     labels: ["Male", "Female"],
@@ -116,8 +131,8 @@ const ClassAnalytics = ({ handleClose}) => {
   return (
     <div className="class-analytics">
       <h1 className="text-2xl font-semibold mb-4">Class Analytics</h1>
-      <button onClick={handleClose}  className="text-red-500 hover:text-red-700 font-semibold mb-4">Close</button>
-
+      <button onClick={handleClose} className="text-red-500 hover:text-red-700 font-semibold mb-4">Close</button>
+  
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -143,7 +158,7 @@ const ClassAnalytics = ({ handleClose}) => {
               </button>
             </div>
           </div>
-
+  
           {/* Table for filtered students */}
           <div className="student-list w-full">
             <h2 className="text-xl">Student List</h2>
@@ -156,36 +171,54 @@ const ClassAnalytics = ({ handleClose}) => {
                     <th className="border px-4 py-2">DOB</th>
                     <th className="border px-4 py-2">Fees Paid</th>
                     <th className="border px-4 py-2">Class</th>
+                    <th className="border px-4 py-2">Teacher</th>
+                    <th className="border px-4 py-2">Year</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, index) => (
-                    <tr key={index}>
-                      <td className="border px-4 py-2">{student.studentName}</td>
-                      <td className="border px-4 py-2">{student.gender}</td>
-                      <td className="border px-4 py-2">{new Date(student.dob).toLocaleDateString()}</td>
-                      <td className="border px-4 py-2">{student.feesPaid ? 'Yes' : 'No'}</td>
-                      <td className="border px-4 py-2">{student.className}</td>
-
-
-                    </tr>
-                  ))}
+                  {filteredStudents.map((student, index) => {
+                    const { teacher, year } = getClassDetails(student.className);
+                    return (
+                      <tr key={index}>
+                        <td className="border px-4 py-2">{student.studentName}</td>
+                        <td className="border px-4 py-2">{student.gender}</td>
+                        <td className="border px-4 py-2">{new Date(student.dob).toLocaleDateString()}</td>
+                        <td className="border px-4 py-2">{student.feesPaid ? 'Yes' : 'No'}</td>
+                        <td className="border px-4 py-2">{student.className}</td>
+                        <td className="border px-4 py-2">{teacher}</td>
+                        <td className="border px-4 py-2">{year}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
-              <p>No students available.</p>
+              <p>No students available for the selected class.</p>
             )}
           </div>
-
-          {/* Graph for gender distribution of filtered students */}
-          <div className="gender-distribution w-1/3">
-            <h3 className="text-lg font-medium">Gender Distribution</h3>
-            <Bar data={chartData} options={{ responsive: true }} />
+  
+          {/* Chart for Gender Distribution */}
+          <div className="chart-container w-full">
+            <h2 className="text-xl">Gender Distribution</h2>
+            <Bar
+              data={chartData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { display: true, position: 'top' },
+                  datalabels: { display: true },
+                },
+                scales: {
+                  y: { beginAtZero: true },
+                },
+              }}
+            />
           </div>
         </div>
       )}
     </div>
   );
+  
 };
 
 export default ClassAnalytics;
